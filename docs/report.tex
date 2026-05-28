@@ -1,0 +1,74 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{setspace}
+
+\onehalfspacing
+
+\title{\textbf{Numerical Analysis of a Finite Journal Bearing using the Finite Difference Method}}
+\author{Priyanshu Prasad}
+\date{28th May, 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Objective}
+The objective of this work is to numerically solve the two-dimensional Reynolds equation for a finite journal bearing using the Finite Difference Method (FDM) and the Gauss-Seidel iterative technique. The analysis evaluates the non-dimensional pressure distribution, total load-carrying capacity, and attitude angle across different length-to-diameter ($L/D$) ratios and eccentricity ratios.
+
+\section{Theoretical Background}
+
+\subsection{Hydrodynamic Lubrication}
+Journal bearings support radial loads by drawing a viscous lubricant into a converging clearance space between the rotating shaft (journal) and the stationary bearing shell. This physical wedging action generates a high-pressure fluid film that prevents metal-to-metal contact. The steady-state pressure distribution $p$ within this fluid film is governed by the 2D Reynolds Equation for an incompressible fluid:
+\begin{equation}
+\frac{1}{R^2}\frac{\partial}{\partial\theta}\left(\frac{h^3}{12\mu}\frac{\partial p}{\partial\theta}\right) + \frac{\partial}{\partial z}\left(\frac{h^3}{12\mu}\frac{\partial p}{\partial z}\right) = \frac{1}{2}\omega\frac{\partial h}{\partial\theta}
+\end{equation}
+where $R$ is the journal radius, $\mu$ is the dynamic viscosity, $\omega$ is the angular velocity, and the coordinates $\theta$ and $z$ represent the circumferential and axial directions, respectively. The film thickness $h$ is defined geometrically as $h = c(1 + \epsilon \cos\theta)$, where $c$ is the radial clearance and $\epsilon$ is the eccentricity ratio.
+
+\subsection{Non-Dimensionalization}
+To make the numerical solution applicable to bearings of any physical size, the governing equation is non-dimensionalized. We introduce the dimensionless variables $\bar{z} = z/L$, $\bar{h} = h/c = 1 + \epsilon \cos\theta$, and $p = K\bar{p}$, where $K = \frac{6\mu\omega R^2}{c^2}$ acts as the pressure multiplier. Substituting these into Equation 1 yields:
+\begin{equation}
+\frac{\partial}{\partial\theta}\left(\bar{h}^3 \frac{\partial\bar{p}}{\partial\theta}\right) + \frac{1}{4}\left(\frac{D}{L}\right)^2 \frac{\partial}{\partial\bar{z}}\left(\bar{h}^3 \frac{\partial\bar{p}}{\partial\bar{z}}\right) = -\epsilon\sin\theta
+\end{equation}
+
+\subsection{Finite Difference Formulation}
+To solve Equation 2 computationally, the continuous bearing domain is discretized into a grid of $M$ nodes circumferentially and $N$ nodes axially. The partial derivatives are replaced with central difference approximations. For instance, the first and second derivatives with respect to $\theta$ at an internal node $(i,j)$ are approximated as:
+\begin{align}
+\frac{\partial\bar{p}}{\partial\theta} &\approx \frac{\bar{p}_{i+1,j} - \bar{p}_{i-1,j}}{2\Delta\theta} \\
+\frac{\partial^2\bar{p}}{\partial\theta^2} &\approx \frac{\bar{p}_{i+1,j} - 2\bar{p}_{i,j} + \bar{p}_{i-1,j}}{(\Delta\theta)^2}
+\end{align}
+
+Applying these difference schemes and algebraically isolating the central node $\bar{p}_{i,j}$ provides the explicit equation used for the Gauss-Seidel iterations:
+\begin{equation}
+\bar{p}_{i,j} = \frac{(\bar{p}_{i+1,j} + \bar{p}_{i-1,j}) - \frac{3\Delta\theta}{2\bar{h}_i}\epsilon\sin\theta_i(\bar{p}_{i+1,j} - \bar{p}_{i-1,j}) + \frac{\epsilon\sin\theta_i}{\bar{h}_i^3}(\Delta\theta)^2 + C(\bar{p}_{i,j+1} + \bar{p}_{i,j-1})}{2(1 + C)}
+\end{equation}
+where the geometric constant $C = \frac{1}{4}\left(\frac{D}{L}\right)^2\left(\frac{\Delta\theta}{\Delta\bar{z}}\right)^2$.
+
+\subsection{Boundary Conditions and Cavitation}
+The physical boundaries dictate that the pressure at the axial ends of the bearing is ambient, meaning $\bar{p}_{i, 0} = 0$ and $\bar{p}_{i, N-1} = 0$. 
+
+Furthermore, as the fluid moves past the minimum film thickness into the diverging section of the bearing, mathematically predicted pressures become negative. Since standard liquid lubricants cannot sustain significant tensile stresses without gases coming out of solution, the film ruptures (cavitation). To capture this reality, the Reynolds (or Half-Sommerfeld) boundary condition is applied: during the numerical iteration, any negative pressure value is immediately set to zero ($\bar{p}_{i,j} \geq 0$).
+
+\section{Results and Discussion}
+The Gauss-Seidel solver was run with an error tolerance of $10^{-5}$. The resulting pressure profile along the bearing centerline ($z = 0.5$) confirms expected hydrodynamic behavior: pressure builds rapidly in the converging wedge and drops off near the minimum film thickness ($\theta = \pi$). The integration of the Reynolds boundary condition effectively truncated the negative pressures in the diverging zone, mimicking actual film rupture.
+
+Integration of the pressure field using Simpson's 1/3rd Rule allowed for the calculation of the total load-carrying capacity and attitude angles. The generated data tables show two main trends:
+\begin{enumerate}
+    \item Increasing the eccentricity ratio ($\epsilon$) forces the fluid through a tighter minimum clearance, causing a sharp, non-linear increase in the peak pressure and total load capacity.
+    \item Higher $L/D$ ratios yield higher load capacities for the same eccentricity because the relative effect of axial side-leakage is reduced.
+\end{enumerate}
+
+\section{Conclusion}
+The finite difference model developed in this study provides a reliable numerical approximation of journal bearing hydrodynamics. By converting the continuous Reynolds equation into a discrete algebraic form and implementing realistic cavitation boundary conditions, the model successfully predicted both pressure distribution and load-carrying capacity. The results align with established lubrication theory, confirming that side leakage heavily penalizes short bearings and that heavily loaded bearings operate at much higher eccentricities.
+
+\begin{thebibliography}{9}
+
+\bibitem{asme_1982}
+J. W. Lund and K. K. Thomsen, \textit{A Calculation Method and Data for the Dynamic Coefficients of Oil-Lubricated Journal Bearings}, in Topics in Fluid Film Bearing and Rotor Bearing System Design and Optimization, ASME, 1982.
+
+\end{thebibliography}
+
+\end{document}
